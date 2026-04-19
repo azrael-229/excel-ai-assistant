@@ -170,20 +170,7 @@ class PreferencesDialog:
         model_frame.pack(fill=tk.X, pady=10)
 
         self.model_var = tk.StringVar()
-        models = [
-            "gpt-3.5-turbo",
-            "gpt-4",
-            "gpt-4-turbo",
-            "gpt-4o",
-            "gpt-4o-mini",
-            "gpt-4-1106-preview",
-            "gpt-4-0125-preview",
-            "gpt-4-vision-preview",
-            "gpt-4.1-preview",
-            "gpt-3.5-turbo-16k"
-        ]
-
-        ttk.Combobox(model_frame, textvariable=self.model_var, values=models, width=30, state="readonly").pack(
+        ttk.Entry(model_frame, textvariable=self.model_var, width=30).pack(
             fill=tk.X, padx=5, pady=5
         )
 

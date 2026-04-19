@@ -22,40 +22,41 @@ class APIType(Enum):
 class APIManager:
     """Manager for interacting with AI APIs (OpenAI and Ollama)"""
 
-    def __init__(self, api_key: str = "", model: str = "gpt-3.5-turbo",
-                 api_type: str = "openai", ollama_url: str = "http://localhost:11434"):
-        """Initialize the API manager"""
-        self.api_key = api_key
-        self.model = model
-        self.api_type = APIType(api_type)
-        self.client = None
-        self.logger = logging.getLogger("APIManager")
-
-        # Initialize Ollama manager
-        self.ollama_url = ollama_url
-        self.ollama_manager = OllamaAPIManager(base_url=ollama_url)
-
-        # Rate limiting
-        self.request_count = 0
-        self.request_start_time = time.time()
-        self.max_requests_per_minute = 20  # Default safe limit
-
-        # Initialize if API key is provided for OpenAI
-        if api_key and self.api_type == APIType.OPENAI:
+    def __init__(self, api_key: str = "", model: str = "",
+                api_type: str = "openai", ollama_url: str = "http://localhost:11434",
+                openai_base_url: str = "http://localhost:1234/v1"):
+       """Initialize the API manager"""
+       self.api_key = api_key
+       self.model = model
+       self.api_type = APIType(api_type)
+       self.client = None
+       self.logger = logging.getLogger("APIManager")
+       self.openai_base_url = openai_base_url
+       # Initialize Ollama manager
+       self.ollama_url = ollama_url
+       self.ollama_manager = OllamaAPIManager(base_url=ollama_url)
+       # Rate limiting
+       self.request_count = 0
+       self.request_start_time = time.time()
+       self.max_requests_per_minute = 20  # Default safe limit
+       # Initialize if API key is provided for OpenAI
+       if api_key and self.api_type == APIType.OPENAI:
             self.initialize()
-
+        
+        
     def initialize(self, api_key: Optional[str] = None) -> bool:
         """Initialize the API client"""
         if self.api_type == APIType.OPENAI:
             if api_key:
                 self.api_key = api_key
-
             if not self.api_key:
                 self.logger.error("API Key is required for OpenAI")
                 return False
-
             try:
-                self.client = OpenAI(api_key=self.api_key)
+                self.client = OpenAI(
+                    api_key=self.api_key,
+                    base_url=self.openai_base_url
+                )
                 return True
             except Exception as e:
                 self.logger.error(f"Failed to initialize OpenAI client: {e}")
@@ -82,15 +83,12 @@ class APIManager:
     def get_available_models(self) -> List[Dict[str, Any]]:
         """Get list of available models based on current API type"""
         if self.api_type == APIType.OPENAI:
-            # Return standard OpenAI models (static list)
-            return [
-                {"id": "gpt-3.5-turbo", "name": "GPT-3.5 Turbo", "api": "openai"},
-                {"id": "gpt-4", "name": "GPT-4", "api": "openai"},
-                {"id": "gpt-4-turbo", "name": "GPT-4 Turbo", "api": "openai"},
-                {"id": "gpt-4o", "name": "GPT-4o", "api": "openai"},
-                {"id": "gpt-4o-mini", "name": "GPT-4o Mini", "api": "openai"},
-                {"id": "gpt-3.5-turbo-16k", "name": "GPT-3.5 Turbo 16k", "api": "openai"}
-            ]
+            try:
+                models = self.client.models.list()
+                return [{"id": m.id, "name": m.id, "api": "openai"} for m in models.data]
+            except Exception as e:
+                self.logger.error(f"Error getting models: {e}")
+                return []
         else:  # OLLAMA
             # Fetch models from Ollama
             success, models, error = self.ollama_manager.list_available_models()

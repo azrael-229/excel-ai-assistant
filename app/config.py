@@ -17,10 +17,9 @@ class AppConfig:
         self._config = {
             # API settings
             'api_type': 'openai',  # 'openai' or 'ollama'
-            'api_key': '',  # OpenAI API key
-            'model': 'gpt-3.5-turbo',  # Current selected model
+            'api_key': '',  # API key (required for real OpenAI, any string for LM Studio)
+            'openai_base_url': 'http://localhost:1234/v1',  # OpenAI-compatible API base URL
             'ollama_url': 'http://localhost:11434',  # Ollama API URL
-            'ollama_model': 'llama3',  # Default Ollama model
 
             # UI settings
             'theme': 'system',
@@ -173,24 +172,15 @@ class AppConfig:
     def get_active_model(self):
         """Get the currently active model info"""
         api_type = self.get('api_type', 'openai')
-        if api_type == 'openai':
-            return {
-                'api_type': 'openai',
-                'model': self.get('model', 'gpt-3.5-turbo')
-            }
-        else:  # ollama
-            return {
-                'api_type': 'ollama',
-                'model': self.get('ollama_model', 'llama3')
-            }
+        return {
+            'api_type': api_type,
+            'model': self.get('model', '')
+        }
 
     def set_active_model(self, api_type, model):
         """Set the active model"""
         self.set('api_type', api_type)
-        if api_type == 'openai':
-            self.set('model', model)
-        else:  # ollama
-            self.set('ollama_model', model)
+        self.set('model', model)
 
     def add_recent_file(self, file_path):
         """Add a file to the recent files list"""
@@ -243,9 +233,8 @@ class AppConfig:
             # API settings
             'api_type': 'openai',
             'api_key': '',
-            'model': 'gpt-3.5-turbo',
+            'openai_base_url': 'http://localhost:1234/v1',
             'ollama_url': 'http://localhost:11434',
-            'ollama_model': 'llama3',
 
             # UI settings
             'theme': 'system',
