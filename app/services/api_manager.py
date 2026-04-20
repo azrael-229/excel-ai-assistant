@@ -38,7 +38,7 @@ class APIManager:
        # Rate limiting
        self.request_count = 0
        self.request_start_time = time.time()
-       self.max_requests_per_minute = 20  # Default safe limit
+       self.max_requests_per_minute = 1000000  # Unlimited
        # Initialize if API key is provided for OpenAI
        if api_key and self.api_type == APIType.OPENAI:
             self.initialize()
